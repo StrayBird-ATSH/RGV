@@ -14,4 +14,25 @@ public class RGV {
         }
     }
 
+    void go() {
+        if (totalTimeConsumed >= (8 * 3600)) {
+            System.out.println(totalTimeConsumed + ";" + Product.count);
+            return;
+        }
+
+    }
+
+    private int requestVacant() {
+        int selectedCNC = 0;
+        int gap = 4;
+        for (int i = 0; i < 8; i++)
+            if (Main.cncs[i].workingType == WorkingType_CNC.WAITING
+                    && (Math.abs(position - (i / 2)) < gap)) {
+                selectedCNC = i;
+                gap = Math.abs(position - (i / 2));
+            }
+        if (gap == 4)
+            return 0;
+        return selectedCNC + 1;
+    }
 }

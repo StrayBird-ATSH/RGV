@@ -1,3 +1,3 @@
 public enum WorkingType_CNC {
-    WASHING,WAITING
+    WORKING,WAITING,DONE
 }
