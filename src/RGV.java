@@ -7,7 +7,7 @@ class RGV {
     private static final int timeMoveInitiate = 7;
     private static final int timeMovePerUnit = 13;
     private static final int washingTime = 25;
-    private static final int processingTime = 400;
+    private static final int processingTime = 560;
 
     private void moveTo(int destination) {
         int distance = Math.abs(destination - position);
@@ -39,7 +39,7 @@ class RGV {
             if (Main.cncs[i].timeStarted < earliestStarted
                     && (Main.cncs[i].workingType == WorkingType_CNC.WORKING))
                 earliestStarted = Main.cncs[i].timeStarted;
-        totalTimeConsumed += (earliestStarted + processingTime);
+        totalTimeConsumed = earliestStarted + processingTime;
         go();
     }
 
