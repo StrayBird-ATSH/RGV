@@ -9,6 +9,8 @@ public class Main {
 
         RGV rgv = new RGV();
         cncs = new CNC[8];
+        for (int i = 0; i < 8; i++)
+            cncs[i] = new CNC();
         rgv.go();
     }
 }

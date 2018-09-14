@@ -2,12 +2,12 @@ class RGV {
     private int position = 1;
     private static int totalTimeConsumed = 0;
     private static int count = 0;
-    private static final int oddLoadTime = 0;
-    private static final int evenLoadTime = 0;
-    private static final int timeMoveInitiate = 0;
-    private static final int timeMovePerUnit = 0;
-    private static final int washingTime = 0;
-    private static final int processingTime = 0;
+    private static final int oddLoadTime = 28;
+    private static final int evenLoadTime = 31;
+    private static final int timeMoveInitiate = 7;
+    private static final int timeMovePerUnit = 13;
+    private static final int washingTime = 25;
+    private static final int processingTime = 400;
 
     private void moveTo(int destination) {
         int distance = Math.abs(destination - position);
@@ -16,9 +16,10 @@ class RGV {
     }
 
     void go() {
+        System.out.println(totalTimeConsumed + ";" + count);
         refreshStatus();
         if (totalTimeConsumed >= (8 * 3600)) {
-            System.out.println(totalTimeConsumed + ";" + count);
+//            System.out.println(totalTimeConsumed + ";" + count);
             return;
         }
         int destination = requestVacant();
@@ -31,7 +32,15 @@ class RGV {
         if (destination > 0) {
             moveTo(destination);
             go();
+            return;
         }
+        int earliestStarted = 8 * 3600;
+        for (int i = 0; i < 8; i++)
+            if (Main.cncs[i].timeStarted < earliestStarted
+                    && (Main.cncs[i].workingType == WorkingType_CNC.WORKING))
+                earliestStarted = Main.cncs[i].timeStarted;
+        totalTimeConsumed += (earliestStarted + processingTime);
+        go();
     }
 
     private int requestVacant() {
@@ -84,7 +93,7 @@ class RGV {
 
     private static void refreshStatus() {
         for (int i = 0; i < 8; i++)
-            if ((totalTimeConsumed - Main.cncs[i].timeStarted) > processingTime)
+            if ((totalTimeConsumed - Main.cncs[i].timeStarted) >= processingTime)
                 Main.cncs[i].workingType = WorkingType_CNC.DONE;
     }
 }
