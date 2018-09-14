@@ -93,7 +93,6 @@ class RGV {
             }
         if (timeToBeConsumed == 10000)
             return 0;
-        holdingProduct = true;
         totalTimeConsumed += timeToBeConsumed;
         Main.cncs[selectedCNC].workingType = WorkingType_CNC.WORKINGA;
         Main.cncs[selectedCNC].timeStarted = totalTimeConsumed;

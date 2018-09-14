@@ -6,7 +6,7 @@ public class Main {
         /*
          * Initiate!!!
          * */
-        int[] blades = {0, 0, 0, 0, 0, 0, 0, 0};
+        int[] blades = {1, 0, 0, 0, 1, 0, 1, 0};
         RGV rgv = new RGV();
         cncs = new CNC[8];
         for (int i = 0; i < 8; i++)
