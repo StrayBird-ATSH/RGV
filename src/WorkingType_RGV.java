@@ -1,3 +1,3 @@
-public enum WorkingType {
+public enum WorkingType_RGV {
     WAITING,MOVING,LOADING,WASHING
 }
