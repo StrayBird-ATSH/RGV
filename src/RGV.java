@@ -16,21 +16,24 @@ class RGV {
     }
 
     void go() {
-        System.out.println(totalTimeConsumed + ";" + count);
         refreshStatus();
-        if (totalTimeConsumed >= (8 * 3600)) {
-//            System.out.println(totalTimeConsumed + ";" + count);
+        if (totalTimeConsumed >= (8 * 3600))
             return;
-        }
         int destination = requestVacant();
         if (destination > 0) {
-            moveTo(destination);
+            System.out.println("UP," + destination + "," +
+                    (totalTimeConsumed - ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)));
+            moveTo((destination + 1) / 2);
             go();
             return;
         }
         destination = requestDone();
         if (destination > 0) {
-            moveTo(destination);
+            int timeOfLoad = (totalTimeConsumed -
+                    ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)) - washingTime;
+            System.out.println("DOWN," + destination + "," + timeOfLoad);
+            System.out.println("UP," + destination + "," + timeOfLoad);
+            moveTo((destination + 1) / 2);
             go();
             return;
         }
@@ -49,9 +52,9 @@ class RGV {
         int currentTime;
         for (int i = 0; i < 8; i++)
             if (Main.cncs[i].workingType == WorkingType_CNC.WAITING) {
-                int distance = Math.abs((i + 1) - position);
+                int distance = Math.abs((i / 2) + 1 - position);
                 currentTime =
-                        (timeMoveInitiate + distance * timeMovePerUnit) +
+                        ((distance > 0 ? timeMoveInitiate : 0) + distance * timeMovePerUnit) +
                                 ((i % 2) == 0 ? oddLoadTime : evenLoadTime);
                 if ((currentTime < timeToBeConsumed)) {
                     selectedCNC = i;
@@ -72,9 +75,9 @@ class RGV {
         int currentTime;
         for (int i = 0; i < 8; i++)
             if (Main.cncs[i].workingType == WorkingType_CNC.DONE) {
-                int distance = Math.abs((i + 1) - position);
+                int distance = Math.abs((i / 2) + 1 - position);
                 currentTime =
-                        (timeMoveInitiate + distance * timeMovePerUnit) +
+                        ((distance > 0 ? timeMoveInitiate : 0) + distance * timeMovePerUnit) +
                                 ((i % 2) == 0 ? oddLoadTime : evenLoadTime) +
                                 washingTime;
                 if ((currentTime < timeToBeConsumed)) {
