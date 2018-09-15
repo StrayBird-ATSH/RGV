@@ -2,8 +2,8 @@ class RGV {
     private int position = 1;
     private boolean holdingProduct = false;
     private boolean washedRecently = false;
-    private static int totalTimeConsumed = 0;
-    private static int count = 0;
+    static int totalTimeConsumed = 0;
+    static int count = 0;
     private static final int oddLoadTime = 27;
     private static final int evenLoadTime = 32;
     private static final int timeMoveInitiate = 4;
@@ -19,7 +19,6 @@ class RGV {
     }
 
     void go() {
-        System.out.println(count);
         refreshStatus();
         if (totalTimeConsumed >= (8 * 3600))
             return;
@@ -30,8 +29,8 @@ class RGV {
              * */
             destination = requestVacant();
             if (destination > 0) {
-                System.out.println("UP," + destination + "," +
-                        (totalTimeConsumed - ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)));
+                /*System.out.println("UP," + destination + "," +
+                        (totalTimeConsumed - ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)));*/
                 moveTo((destination + 1) / 2);
                 go();
                 return;
@@ -46,8 +45,8 @@ class RGV {
             if (destination > 0) {
                 int timeOfLoad = (totalTimeConsumed -
                         ((destination % 2) != 0 ? oddLoadTime : evenLoadTime));
-                System.out.println("A,DOWN," + destination + "," + timeOfLoad);
-                System.out.println("A,UP," + destination + "," + timeOfLoad);
+                /*System.out.println("A,DOWN," + destination + "," + timeOfLoad);
+                System.out.println("A,UP," + destination + "," + timeOfLoad);*/
                 moveTo((destination + 1) / 2);
                 go();
                 return;
@@ -58,8 +57,8 @@ class RGV {
                 int timeOfLoad = (totalTimeConsumed -
                         ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)) -
                         (washedRecently ? washingTime : 0);
-                System.out.println("B,DOWN," + destination + "," + timeOfLoad);
-                System.out.println("B,UP," + destination + "," + timeOfLoad);
+                /*System.out.println("B,DOWN," + destination + "," + timeOfLoad);
+                System.out.println("B,UP," + destination + "," + timeOfLoad);*/
                 moveTo((destination + 1) / 2);
                 go();
                 return;
@@ -67,6 +66,9 @@ class RGV {
         }
         int earliestFinish = 8 * 3600;
         for (int i = 0; i < 8; i++) {
+            if (!(Main.cncs[i].workingType == WorkingType_CNC.WORKINGA ||
+                    Main.cncs[i].workingType == WorkingType_CNC.WORKINGB))
+                continue;
             int bladeZero = Main.cncs[i].blade;
             int timeFinish = Main.cncs[i].timeStarted +
                     (bladeZero > 0 ? processingTimeB : processingTimeA);
@@ -83,8 +85,6 @@ class RGV {
         int selectedCNC = 0;
         int timeToBeConsumed = 10000;
         int currentTime;
-
-
         for (int i = 0; i < 8; i++)
             if (Main.cncs[i].workingType == WorkingType_CNC.WAITINGA) {
                 int distance = Math.abs((i / 2) + 1 - position);
@@ -96,7 +96,6 @@ class RGV {
                     timeToBeConsumed = currentTime;
                 }
             }
-
         if (timeToBeConsumed == 10000)
             return 0;
         totalTimeConsumed += timeToBeConsumed;
@@ -150,6 +149,7 @@ class RGV {
             return 0;
         holdingProduct = false;
         count++;
+//        System.out.println(totalTimeConsumed);
         totalTimeConsumed += timeToBeConsumed;
         if (Main.cncs[selectedCNC].workingType == WorkingType_CNC.WAITINGB)
             washedRecently = false;
