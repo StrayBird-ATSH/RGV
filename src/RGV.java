@@ -9,7 +9,7 @@ class RGV {
     private static final int timeMovePerUnit = 14;
     private static final int washingTime = 25;
     private static final int processingTimeA = 545;
-    private static final int processingTimeB = 0;
+    private static final int processingTimeB = 182;
 
     private void moveTo(int destination) {
         int distance = Math.abs(destination - position);
@@ -28,8 +28,8 @@ class RGV {
              * */
             destination = requestVacant();
             if (destination > 0) {
-                System.out.println("UP," + destination + "," +
-                        (totalTimeConsumed - ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)));
+                /*System.out.println("UP," + destination + "," +
+                        (totalTimeConsumed - ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)));*/
                 moveTo((destination + 1) / 2);
                 go();
                 return;
@@ -43,8 +43,10 @@ class RGV {
             if (destination > 0) {
                 int timeOfLoad = (totalTimeConsumed -
                         ((destination % 2) != 0 ? oddLoadTime : evenLoadTime));
+/*
                 System.out.println("A,DOWN," + destination + "," + timeOfLoad);
                 System.out.println("A,UP," + destination + "," + timeOfLoad);
+*/
                 moveTo((destination + 1) / 2);
                 go();
                 return;
@@ -55,8 +57,10 @@ class RGV {
             if (destination > 0) {
                 int timeOfLoad = (totalTimeConsumed -
                         ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)) - washingTime;
+/*
                 System.out.println("B,DOWN," + destination + "," + timeOfLoad);
                 System.out.println("B,UP," + destination + "," + timeOfLoad);
+*/
                 moveTo((destination + 1) / 2);
                 go();
                 return;
@@ -144,6 +148,7 @@ class RGV {
         holdingProduct = false;
         count++;
         totalTimeConsumed += timeToBeConsumed;
+        System.out.println("B finish, count= " + count + ",time= " + totalTimeConsumed);
         Main.cncs[selectedCNC].workingType = WorkingType_CNC.WORKINGA;
         Main.cncs[selectedCNC].timeStarted = totalTimeConsumed;
         return selectedCNC + 1;
