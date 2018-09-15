@@ -1,3 +1,3 @@
 public enum WorkingType_CNC {
-    WORKING,WAITING,DONE,FAULT,RepairFinish
+    WORKINGA, WAITINGA, DONEA, WORKINGB, DONEB, WAITINGB, FAULT, RepairFinish
 }
