@@ -71,6 +71,10 @@ class RGV {
                     Main.cncs[i].workingType == WorkingType_CNC.WORKINGB ||
                     Main.cncs[i].workingType == WorkingType_CNC.FAULT))
                 continue;
+            if (holdingProduct && Main.cncs[i].blade == 0)
+                continue;
+            else if ((!holdingProduct) && Main.cncs[i].blade == 1)
+                continue;
             int timeFinish;
             int blade = Main.cncs[i].blade;
             if (Main.cncs[i].workingType == WorkingType_CNC.FAULT)
@@ -178,7 +182,7 @@ class RGV {
     }
 
     private void randomFault(CNC cnc, int number) {
-        if (true)
+        if (false)
             if (Math.random() < 0.01) {
                 int processingTime = cnc.blade == 0 ? processingTimeA : processingTimeB;
                 cnc.workingType = WorkingType_CNC.FAULT;
