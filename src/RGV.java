@@ -1,16 +1,14 @@
 class RGV {
     private int position = 1;
-    private boolean holdingProduct = false;
-    private boolean washedRecently = false;
-    private static int totalTimeConsumed = 0;
-    private static int count = 0;
-    private static final int oddLoadTime = 27;
-    private static final int evenLoadTime = 32;
-    private static final int timeMoveInitiate = 4;
-    private static final int timeMovePerUnit = 14;
+    static int totalTimeConsumed = 0;
+    static int count = 0;
+    private static final boolean random = false;
+    private static final int oddLoadTime = 28;
+    private static final int evenLoadTime = 31;
+    private static final int timeMoveInitiate = 7;
+    private static final int timeMovePerUnit = 13;
     private static final int washingTime = 25;
-    private static final int processingTimeA = 455;
-    private static final int processingTimeB = 182;
+    private static final int processingTime = 560;
 
     private void moveTo(int destination) {
         int distance = Math.abs(destination - position);
@@ -19,73 +17,35 @@ class RGV {
     }
 
     void go() {
-        System.out.println(count);
         refreshStatus();
-        if (totalTimeConsumed >= (8 * 3600))
+        if (totalTimeConsumed >= (8 * 3600)) {
+/*            System.out.println(count);*/
             return;
-        int destination;
-        if (!holdingProduct) {
-            /*
-             * At the start.
-             * */
-            destination = requestVacant();
-            if (destination > 0) {
-                System.out.println("UP," + destination + "," +
-                        (totalTimeConsumed - ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)));
-                moveTo((destination + 1) / 2);
-                go();
-                return;
-            }
-
-
-            /*
-             *
-             * After a CNC-A has finished
-             * */
-            destination = requestDoneA();
-            if (destination > 0) {
-                int timeOfLoad = (totalTimeConsumed -
-                        ((destination % 2) != 0 ? oddLoadTime : evenLoadTime));
-                System.out.println("A,DOWN," + destination + "," + timeOfLoad);
-                System.out.println("A,UP," + destination + "," + timeOfLoad);
-                moveTo((destination + 1) / 2);
-                go();
-                return;
-            }
-        } else {
-            destination = requestDoneB();
-            if (destination > 0) {
-                int timeOfLoad = (totalTimeConsumed -
-                        ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)) -
-                        (washedRecently ? washingTime : 0);
-                System.out.println("B,DOWN," + destination + "," + timeOfLoad);
-                System.out.println("B,UP," + destination + "," + timeOfLoad);
-                moveTo((destination + 1) / 2);
-                go();
-                return;
-            }
         }
-        int earliestFinish = 8 * 3600;
-        for (int i = 0; i < 8; i++) {
-            if (!(Main.cncs[i].workingType == WorkingType_CNC.WORKINGA ||
-                    Main.cncs[i].workingType == WorkingType_CNC.WORKINGB ||
-                    Main.cncs[i].workingType == WorkingType_CNC.FAULT))
-                continue;
-            if (holdingProduct && Main.cncs[i].blade == 0)
-                continue;
-            else if ((!holdingProduct) && Main.cncs[i].blade == 1)
-                continue;
-            int timeFinish;
-            int blade = Main.cncs[i].blade;
-            if (Main.cncs[i].workingType == WorkingType_CNC.FAULT)
-                timeFinish = Main.cncs[i].timeRepairFinish;
-            else
-                timeFinish = Main.cncs[i].timeStarted +
-                        (blade > 0 ? processingTimeB : processingTimeA);
-            if (timeFinish < earliestFinish)
-                earliestFinish = timeFinish;
+        int destination = requestVacant();
+        if (destination > 0) {
+            System.out.println("UP," + destination + "," +
+                    (totalTimeConsumed - ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)));
+            moveTo((destination + 1) / 2);
+            go();
+            return;
         }
-        totalTimeConsumed = earliestFinish;
+        destination = requestDone();
+        if (destination > 0) {
+            int timeOfLoad = (totalTimeConsumed -
+                    ((destination % 2) != 0 ? oddLoadTime : evenLoadTime)) - washingTime;
+            System.out.println("DOWN," + destination + "," + timeOfLoad);
+            System.out.println("UP," + destination + "," + timeOfLoad);
+            moveTo((destination + 1) / 2);
+            go();
+            return;
+        }
+        int earliestStarted = 8 * 3600;
+        for (int i = 0; i < 8; i++)
+            if (Main.cncs[i].timeStarted < earliestStarted
+                    && (Main.cncs[i].workingType == WorkingType_CNC.WORKING))
+                earliestStarted = Main.cncs[i].timeStarted;
+        totalTimeConsumed = earliestStarted + processingTime;
         go();
     }
 
@@ -93,116 +53,106 @@ class RGV {
         int selectedCNC = 0;
         int timeToBeConsumed = 10000;
         int currentTime;
-        for (int i = 0; i < 8; i++)
-            if (Main.cncs[i].workingType == WorkingType_CNC.WAITINGA ||
-                    (Main.cncs[i].workingType == WorkingType_CNC.RepairFinish &&
-                            Main.cncs[i].blade == 0)) {
-                int distance = Math.abs((i / 2) + 1 - position);
-                currentTime =
-                        ((distance > 0 ? timeMoveInitiate : 0) + distance * timeMovePerUnit) +
-                                ((i % 2) == 0 ? oddLoadTime : evenLoadTime);
-                if ((currentTime < timeToBeConsumed)) {
-                    selectedCNC = i;
-                    timeToBeConsumed = currentTime;
+        int countAvailable = 0;
+        int[] result = {0, 0, 0, 0, 0, 0, 0, 0};
+        if (random) {
+            for (int j = 0; j < 8; j++) {
+                if (Main.cncs[j].workingType == WorkingType_CNC.WAITING) {
+                    result[countAvailable] = j;
+                    countAvailable++;
                 }
             }
+            selectedCNC = result[(int) (countAvailable * Math.random())];
+            int distance = Math.abs((selectedCNC / 2) + 1 - position);
+            if (countAvailable > 0)
+                timeToBeConsumed =
+                        ((distance > 0 ? timeMoveInitiate : 0) + distance * timeMovePerUnit) +
+                                ((selectedCNC % 2) == 0 ? oddLoadTime : evenLoadTime);
+        } else
+            for (int i = 0; i < 8; i++)
+                if (Main.cncs[i].workingType == WorkingType_CNC.WAITING) {
+                    int distance = Math.abs((i / 2) + 1 - position);
+                    currentTime =
+                            ((distance > 0 ? timeMoveInitiate : 0) + distance * timeMovePerUnit) +
+                                    ((i % 2) == 0 ? oddLoadTime : evenLoadTime);
+                    if ((currentTime < timeToBeConsumed)) {
+                        selectedCNC = i;
+                        timeToBeConsumed = currentTime;
+                    }
+                }
         if (timeToBeConsumed == 10000)
             return 0;
-        holdingProduct = false;
         totalTimeConsumed += timeToBeConsumed;
-        Main.cncs[selectedCNC].workingType = WorkingType_CNC.WORKINGA;
+        Main.cncs[selectedCNC].workingType = WorkingType_CNC.WORKING;
         Main.cncs[selectedCNC].timeStarted = totalTimeConsumed;
-        randomFault(Main.cncs[selectedCNC], selectedCNC);
         return selectedCNC + 1;
     }
 
-    private int requestDoneA() {
+    private int requestDone() {
         int selectedCNC = 0;
         int timeToBeConsumed = 10000;
         int currentTime;
-        for (int i = 0; i < 8; i++)
-            if (Main.cncs[i].workingType == WorkingType_CNC.DONEA) {
-                int distance = Math.abs((i / 2) + 1 - position);
-                currentTime =
-                        ((distance > 0 ? timeMoveInitiate : 0) + distance * timeMovePerUnit) +
-                                ((i % 2) == 0 ? oddLoadTime : evenLoadTime);
-                if ((currentTime < timeToBeConsumed)) {
-                    selectedCNC = i;
-                    timeToBeConsumed = currentTime;
-                }
-            }
-        if (timeToBeConsumed == 10000)
-            return 0;
-        holdingProduct = true;
-        totalTimeConsumed += timeToBeConsumed;
-        Main.cncs[selectedCNC].workingType = WorkingType_CNC.WORKINGA;
-        Main.cncs[selectedCNC].timeStarted = totalTimeConsumed;
-        randomFault(Main.cncs[selectedCNC], selectedCNC);
-        return selectedCNC + 1;
-    }
+        boolean allWorking = true;
+        int earliestStarted = 8 * 3600;
 
-
-    private int requestDoneB() {
-        int selectedCNC = 0;
-        int timeToBeConsumed = 10000;
-        int currentTime;
-        for (int i = 0; i < 8; i++)
-            if (Main.cncs[i].workingType == WorkingType_CNC.DONEB ||
-                    (Main.cncs[i].workingType == WorkingType_CNC.WAITINGB) ||
-                    (Main.cncs[i].workingType == WorkingType_CNC.RepairFinish &&
-                            Main.cncs[i].blade == 1)) {
-                int distance = Math.abs((i / 2) + 1 - position);
-                currentTime =
-                        ((distance > 0 ? timeMoveInitiate : 0) + distance * timeMovePerUnit) +
-                                ((i % 2) == 0 ? oddLoadTime : evenLoadTime);
-                if ((currentTime < timeToBeConsumed)) {
-                    selectedCNC = i;
-                    timeToBeConsumed = currentTime;
-                }
-            }
-        if (timeToBeConsumed == 10000)
-            return 0;
-
-
-        holdingProduct = false;
-        if (Main.cncs[selectedCNC].workingType != WorkingType_CNC.RepairFinish)
-            count++;
-        totalTimeConsumed += timeToBeConsumed;
-        if (Main.cncs[selectedCNC].workingType == WorkingType_CNC.WAITINGB ||
-                Main.cncs[selectedCNC].workingType == WorkingType_CNC.RepairFinish)
-            washedRecently = false;
-        else {
-            washedRecently = true;
+        if (count >= 9) {
             totalTimeConsumed += washingTime;
+            refreshStatus();
         }
-        Main.cncs[selectedCNC].workingType = WorkingType_CNC.WORKINGB;
+
+        for (int i = 0; i < 8; i++)
+            if (Main.cncs[i].workingType == WorkingType_CNC.DONE)
+                allWorking = false;
+
+        if (allWorking) {
+            for (int i = 0; i < 8; i++)
+                if (Main.cncs[i].timeStarted < earliestStarted
+                        && (Main.cncs[i].workingType == WorkingType_CNC.WORKING)) {
+                    earliestStarted = Main.cncs[i].timeStarted;
+                }
+            totalTimeConsumed = earliestStarted + processingTime;
+            refreshStatus();
+        }
+
+        int countAvailable = 0;
+        int[] result = {0, 0, 0, 0, 0, 0, 0, 0};
+        if (random) {
+            for (int j = 0; j < 8; j++) {
+                if (Main.cncs[j].workingType == WorkingType_CNC.DONE) {
+                    result[countAvailable] = j;
+                    countAvailable++;
+                }
+            }
+            selectedCNC = result[(int) (countAvailable * Math.random())];
+            int distance = Math.abs((selectedCNC / 2) + 1 - position);
+            if (countAvailable > 0)
+                timeToBeConsumed =
+                        ((distance > 0 ? timeMoveInitiate : 0) + distance * timeMovePerUnit) +
+                                ((selectedCNC % 2) == 0 ? oddLoadTime : evenLoadTime);
+        } else
+            for (int i = 0; i < 8; i++)
+                if (Main.cncs[i].workingType == WorkingType_CNC.DONE) {
+                    int distance = Math.abs((i / 2) + 1 - position);
+                    currentTime =
+                            ((distance > 0 ? timeMoveInitiate : 0) + distance * timeMovePerUnit) +
+                                    ((i % 2) == 0 ? oddLoadTime : evenLoadTime);
+                    if ((currentTime < timeToBeConsumed)) {
+                        selectedCNC = i;
+                        timeToBeConsumed = currentTime;
+                    }
+                }
+        if (timeToBeConsumed == 10000)
+            return 0;
+        count++;
+        totalTimeConsumed += timeToBeConsumed;
+        Main.cncs[selectedCNC].workingType = WorkingType_CNC.WORKING;
         Main.cncs[selectedCNC].timeStarted = totalTimeConsumed;
-        randomFault(Main.cncs[selectedCNC], selectedCNC);
         return selectedCNC + 1;
     }
-
-    private void randomFault(CNC cnc, int number) {
-        if (false)
-            if (Math.random() < 0.01) {
-                int processingTime = cnc.blade == 0 ? processingTimeA : processingTimeB;
-                cnc.workingType = WorkingType_CNC.FAULT;
-                cnc.timeRepairFinish = cnc.timeStarted + (int) (processingTime * Math.random()) +
-                        600 + (int) (600 * Math.random());
-                System.out.println(number + " !!!!FAULT!!!! until" + cnc.timeRepairFinish);
-            }
-    }
-
 
     private static void refreshStatus() {
         for (int i = 0; i < 8; i++)
-            if (Main.cncs[i].workingType == WorkingType_CNC.FAULT) {
-                if (totalTimeConsumed >= Main.cncs[i].timeRepairFinish)
-                    Main.cncs[i].workingType = WorkingType_CNC.RepairFinish;
-            } else if ((totalTimeConsumed - Main.cncs[i].timeStarted) >= processingTimeA
-                    && Main.cncs[i].blade == 0)
-                Main.cncs[i].workingType = WorkingType_CNC.DONEA;
-            else if ((totalTimeConsumed - Main.cncs[i].timeStarted) >= processingTimeB
-                    && Main.cncs[i].blade == 1)
-                Main.cncs[i].workingType = WorkingType_CNC.DONEB;
+            if ((totalTimeConsumed - Main.cncs[i].timeStarted) >= processingTime)
+                Main.cncs[i].workingType = WorkingType_CNC.DONE;
     }
 }

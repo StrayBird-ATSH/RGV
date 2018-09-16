@@ -1,11 +1,5 @@
 class CNC {
-    WorkingType_CNC workingType;
+    WorkingType_CNC workingType = WorkingType_CNC.WAITING;
     int timeStarted = 0;
-    int blade;
-    int timeRepairFinish = 0;
-
-    CNC(int blade) {
-        this.blade = blade;
-        this.workingType = blade == 0 ? WorkingType_CNC.WAITINGA : WorkingType_CNC.WAITINGB;
-    }
+    int blade = 0;
 }
